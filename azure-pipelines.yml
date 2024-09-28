@@ -2,7 +2,7 @@ trigger:
   - main  # Ou o nome do branch que você deseja monitorar para execuções automáticas
 
 pool:
-  vmImage: 'windows-latest'  # Utiliza uma imagem de VM Windows para compilar o projeto
+  vmImage: 'windows-2019'  # Utiliza uma imagem de VM Windows para compilar o projeto
 
 variables:
   buildConfiguration: 'Release'  # Variável de configuração para definir como o build será executado
