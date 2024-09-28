@@ -1,58 +1,56 @@
+# Definição da pipeline e disparadores
+name: 'Calculator CI'
 trigger:
-  - main  # Ou o nome do branch que você deseja monitorar para execuções automáticas
+  branches:
+    include:
+      - main  # Execute a pipeline para cada commit na branch 'main'
 
-pool:
-  vmImage: 'windows-2019'  # Utiliza uma imagem de VM Windows para compilar o projeto
-
+# Definição de variáveis
 variables:
-  buildConfiguration: 'Release'  # Variável de configuração para definir como o build será executado
+  buildConfiguration: 'Release'
+  buildPlatform: 'Any CPU'  # Defina a plataforma como Any CPU
 
-steps:
-  - checkout: self
+# Jobs e etapas
+jobs:
+- job: Build
+  pool:
+    vmImage: 'windows-2019'  # Altere a imagem para Windows Server 2019
 
-  # Instalar dependências do Node.js, se necessário
-  - task: NodeTool@0
-    inputs:
-      versionSpec: '14.x'  # Ou a versão de Node.js que o projeto exige
-    displayName: 'Install Node.js'
+  steps:
+    # Etapa 1: Instalar .NET SDK 8.0
+    - task: UseDotNet@2
+      displayName: 'Instalar .NET SDK 8.0'
+      inputs:
+        packageType: 'sdk'
+        version: '8.0.x'  # Instala o SDK 8.0 (substitua "x" pela versão mais recente ou deixe como está)
 
-  # Restaurar pacotes NuGet
-  - task: UseDotNet@2
-    inputs:
-      packageType: 'sdk'
-      version: '6.x'  # Certifique-se de usar a versão correta do .NET SDK
-      installationPath: $(Agent.ToolsDirectory)/dotnet
-    displayName: 'Install .NET Core SDK'
+    # Etapa 2: Restaurar pacotes NuGet
+    - task: NuGetCommand@2
+      displayName: 'Restaurar pacotes NuGet'
+      inputs:
+        command: 'restore'
+        restoreSolution: '**/*.sln'  # Caminho para o arquivo .sln (solução)
 
-  - task: NuGetCommand@2
-    inputs:
-      restoreSolution: '$(Build.SourcesDirectory)/**/*.sln'
-    displayName: 'Restore NuGet packages'
+    # Etapa 3: Compilar solução
+    - task: VSBuild@1
+      displayName: 'Compilar solução'
+      inputs:
+        solution: '**/*.sln'  # Caminho para a solução
+        msbuildArgs: '/p:Configuration=$(buildConfiguration)'  # Defina a configuração para Release
+        platform: '$(buildPlatform)'  # Defina a plataforma
+        configuration: '$(buildConfiguration)'
 
-  # Compilar a solução
-  - task: VSBuild@1
-    inputs:
-      solution: '**/*.sln'
-      msbuildArgs: '/p:Configuration=$(buildConfiguration)'
-      platform: 'Any CPU'
-      configuration: '$(buildConfiguration)'
-    displayName: 'Build solution'
+    # Etapa 4: Executar testes (opcional, remova se não precisar)
+    - task: VSTest@2
+      displayName: 'Executar testes'
+      inputs:
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
 
-  # Executar testes
-  - task: VSTest@2
-    inputs:
-      testSelector: 'testAssemblies'
-      testAssemblyVer2: |
-        **\$(buildConfiguration)\*.Test.dll
-        !**\obj\**
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
-    displayName: 'Run tests'
-
-  # Publicar os artefatos do build
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'drop'
-      publishLocation: 'Container'
-    displayName: 'Publish build artifacts'
+    # Etapa 5: Publicar artefatos de build (opcional)
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publicar Artefatos'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Caminho para os artefatos
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
