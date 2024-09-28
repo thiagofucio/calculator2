@@ -1,0 +1,58 @@
+trigger:
+  - main  # Ou o nome do branch que você deseja monitorar para execuções automáticas
+
+pool:
+  vmImage: 'windows-latest'  # Utiliza uma imagem de VM Windows para compilar o projeto
+
+variables:
+  buildConfiguration: 'Release'  # Variável de configuração para definir como o build será executado
+
+steps:
+  - checkout: self
+
+  # Instalar dependências do Node.js, se necessário
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '14.x'  # Ou a versão de Node.js que o projeto exige
+    displayName: 'Install Node.js'
+
+  # Restaurar pacotes NuGet
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '6.x'  # Certifique-se de usar a versão correta do .NET SDK
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+    displayName: 'Install .NET Core SDK'
+
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: '$(Build.SourcesDirectory)/**/*.sln'
+    displayName: 'Restore NuGet packages'
+
+  # Compilar a solução
+  - task: VSBuild@1
+    inputs:
+      solution: '**/*.sln'
+      msbuildArgs: '/p:Configuration=$(buildConfiguration)'
+      platform: 'Any CPU'
+      configuration: '$(buildConfiguration)'
+    displayName: 'Build solution'
+
+  # Executar testes
+  - task: VSTest@2
+    inputs:
+      testSelector: 'testAssemblies'
+      testAssemblyVer2: |
+        **\$(buildConfiguration)\*.Test.dll
+        !**\obj\**
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+    displayName: 'Run tests'
+
+  # Publicar os artefatos do build
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
+    displayName: 'Publish build artifacts'
