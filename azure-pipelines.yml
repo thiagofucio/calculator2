@@ -9,13 +9,14 @@ trigger:
 
 # Variáveis
 variables:
-  buildConfiguration: 'Release' # Defina a configuração de build como 'Release'
+  buildConfiguration: 'Release'  # Defina a configuração de build como 'Release'
+  buildPlatform: 'Any CPU'       # Defina a plataforma como 'Any CPU'
 
 # Jobs e etapas
 jobs:
 - job: Build
   pool:
-    vmImage: 'windows-latest' # Utilize uma VM Windows
+    vmImage: 'windows-latest'  # Utilize uma VM Windows
 
   steps:
     # Etapa 1: Configuração do .NET SDK
@@ -38,8 +39,8 @@ jobs:
       displayName: 'Compilar solução'
       inputs:
         solution: '**/*.sln'
-        msbuildArgs: '/p:Configuration=$(buildConfiguration)'
-        platform: 'Any CPU'
+        msbuildArgs: '/p:Configuration=$(buildConfiguration) /p:Platform="Any CPU"'  # Certifique-se de passar a configuração correta
+        platform: '$(buildPlatform)'  # Variável de plataforma definida acima
         configuration: '$(buildConfiguration)'
 
     # Etapa 4: Executar testes (opcional)
