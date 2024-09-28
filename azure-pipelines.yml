@@ -8,7 +8,7 @@ trigger:
 # Definição de variáveis
 variables:
   buildConfiguration: 'Release'
-  buildPlatform: 'Any CPU'  # Defina a plataforma como Any CPU
+  #buildPlatform: 'Any CPU'  # Defina a plataforma como Any CPU
 
 # Jobs e etapas
 jobs:
