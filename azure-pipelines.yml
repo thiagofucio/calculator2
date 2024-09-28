@@ -16,7 +16,7 @@ variables:
 jobs:
 - job: Build
   pool:
-    vmImage: 'windows-latest'  # Utilize uma VM Windows
+    vmImage: 'windows-2019'  # Utilize uma VM Windows
 
   steps:
     # Etapa 1: Configuração do .NET SDK
